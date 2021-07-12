@@ -2,16 +2,16 @@ package main
 
 import (
 	"strings"
-	"time"
-
-	"github.com/yeqown/log"
 
 	"github.com/valyala/fasthttp"
+	"github.com/yeqown/log"
+
 	proxy "github.com/yeqown/fasthttp-reverse-proxy/v2"
 )
 
 var (
-	proxyServer  = proxy.NewReverseProxy("localhost:8080", proxy.WithTimeout(5*time.Second))
+	//proxyServer  = proxy.NewReverseProxy("localhost:8080", proxy.WithTimeout(5*time.Second))
+	proxyServer  = proxy.NewReverseProxy("localhost:8080")
 	proxyServer2 = proxy.NewReverseProxy("api-js.mixpanel.com")
 	proxyServer3 = proxy.NewReverseProxy("baidu.com")
 )
@@ -23,12 +23,8 @@ func ProxyHandler(ctx *fasthttp.RequestCtx) {
 
 	if strings.HasPrefix(requestURI, "/local") {
 		// "/local" path proxy to localhost
-		arr := strings.Split(requestURI, "?")
-		if len(arr) > 1 {
-			arr = append([]string{"/foo"}, arr[1:]...)
-			requestURI = strings.Join(arr, "?")
-		}
-
+		requestURI = strings.TrimLeft(requestURI, "/local")
+		requestURI = requestURI + ctx.QueryArgs().String()
 		ctx.Request.SetRequestURI(requestURI)
 		proxyServer.ServeHTTP(ctx)
 	} else if strings.HasPrefix(requestURI, "/baidu") {
